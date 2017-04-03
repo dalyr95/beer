@@ -10,8 +10,9 @@ var app = http.createServer(function(req, res) {
   fileServer.serve(req, res);
 }).listen(8888);
 
+var round   = 1;
 var clients = [];
-var room = 'beer';
+var room    = 'beer';
 
 var io = socketIO.listen(app);
 io.sockets.on('connection', function(socket) {
@@ -66,7 +67,22 @@ io.sockets.on('connection', function(socket) {
     }
   });
 
-  socket.on("disconnect", function(){
+  socket.on('selected', function(pub){
+    var selector = {};
+
+    clients = clients.map(function(client) {
+      if (client.socket === socket.id) {
+        client.pub  = pub;
+        selector    = client;
+      }
+
+      return client;
+    });
+    console.log(clients);
+    io.sockets.in(room).emit('selection', selector.name, selector.socket, clients, round);
+  });
+
+  socket.on('disconnect', function(){
     var leaver = {};
 
     clients = clients.filter(function(client) {
